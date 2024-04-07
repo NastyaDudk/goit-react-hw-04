@@ -1,49 +1,43 @@
-import { MdSearch } from 'react-icons/md';
-import css from './SearchBar.module.css';
-import { useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
-const Searchbar = ({ onSubmit }) => {
-  const [query, setQuery] = useState('');
+import { GoSearch } from "react-icons/go";
+import css from "./SearchBar.module.css";
 
+const SearchBar = ({ onSubmit, searchQuery, setSearchQuery }) => {
+  const handleInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    onSubmit();
+  };
 
-    if (query.trim() === '') {
-      toast.error('Please enter a search query!');
-      return;
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onSubmit();
     }
-
-    onSubmit(query);
-    
-  }
-
-  const handleChange = (e) => {
-    setQuery(e.target.value);
   };
 
   return (
-    <header className={css.Searchbar}>
-      <form className={css.SearchForm} onSubmit={handleSubmit}>
-        <button type="submit" className={css.SearchFormButton}>
-          <MdSearch className={css.SearchFormButton} />
-          <span className={css.SearchFormButtonLabel}>Search</span>
-        </button>
-        <input
-          className={css.SearchFormInput}
-          type="text"
-          value={query}
-          onChange={handleChange}
-          autoComplete="off"
-          autoFocus
-          placeholder="Search images and photos"
-        />
+    <header className={css.header}>
+      <form onSubmit={handleSubmit}>
+        <div className={css.input_container}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder="Search images and photos"
+          />
+          <button type="submit" className={css.icon} onClick={handleSubmit}>
+            <GoSearch />
+          </button>
+        </div>
       </form>
-      
     </header>
   );
 };
 
-export default Searchbar;
+
+export default SearchBar;

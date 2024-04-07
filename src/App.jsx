@@ -1,86 +1,106 @@
-import React, { useEffect, useState } from 'react';
-import Searchbar from './components/SearchBar/SearchBar';
-import ImageGallery from './components/ImageGallery/ImageGallery';
-import Button from './components/Button/Button';
-import Loader from './components/Loader/Loader';
-import Modal from './components/Modal/Modal';
-import styles from './App.module.css';
-import getImages from './components/ServiceApi/ServiceApi';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useRef, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
-const App = () => {
+import { fetchPhotos } from "./ServiceApi/Unplash";
+import SearchBar from "./components/SearchBar/SearchBar";
+import ImageGallery from "./components/ImageGallery/ImageGallery";
+import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
+import Loader from "./components/Loader/Loader";
+import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
+import ImageModal from "./components/ImageModal/ImageModal";
+
+function App() {
   const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [total_pages, setTotal_Pages] = useState(0);
+  const [activeImg, setActiveImg] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState('');
-  const [query, setQuery] = useState('');
-  const [showBtn, setShowBtn] = useState(false);
 
-  useEffect(() => {
-    if (!query) return;
-    const searchImages = async () => {
-      setLoading(true);
+  const searchQueryRef = useRef();
 
-      try {
-        const response = await getImages(query, page);
-        if (response.hits.length === 0) {
-          throw new Error('No images found, try again ✊');
-        }
-        setImages(prevImages => [...prevImages, ...response.hits]);
-        setShowBtn(page < Math.ceil(response.totalHits / 12));
-      } catch (error) {
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
+  const handleFetch = async (newPage, query) => {
+    try {
+      if (!query.trim()) {
+        setImages([]);
+
+        toast.error("Search input must be filled!", {
+          position: "top-right",
+        });
+        return;
       }
-    };
 
-    searchImages();
-  }, [query, page]);
+      setIsLoading(true);
+      setError(false);
 
-  const handleSearch = newQuery => {
-    setImages([]);
-    setPage(1);
-    setQuery(newQuery);
+      const { total, results, total_pages } = await fetchPhotos(query, newPage);
+      if (!results.length) {
+        toast.error(`Nothing was found for ${query}`, {
+          position: "top-right",
+        });
+        setImages([]);
+        return;
+      }
+      newPage > 1 ? setImages([...images, ...results]) : setImages(results);
+
+      setTotal(total);
+      setTotal_Pages(total_pages);
+    } catch (error) {
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const loadMoreImages = () => {
-    setPage(prevPage => prevPage + 1);
+  const onSubmit = async () => {
+    if (page > 1) setPage(1);
+    handleFetch(1, searchQuery);
+    setSearchQuery("");
+    searchQueryRef.current = searchQuery;
   };
 
-  const openModal = imageUrl => {
+  const loadMoreHandle = async () => {
+    setPage(page + 1);
+    handleFetch(page + 1, searchQueryRef.current);
+  };
+
+  const onImageClick = (item) => {
+    setActiveImg(item);
     setModalOpen(true);
-    setSelectedImage(imageUrl);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedImage('');
-    document.body.style.overflow = '';
-  };
-
-  const handleOverlayClick = () => {
-    closeModal();
   };
 
   return (
-    <div className={styles.App}>
-      <ToastContainer />
-      <Searchbar onSubmit={handleSearch} />
-      <ImageGallery images={images} openModal={openModal} />
-      {loading && <Loader />}
-      {showBtn && <Button onLoadMore={loadMoreImages} hasMore={!loading} />}
-      <Modal
-        isOpen={modalOpen}
-        closeModal={closeModal}
-        imageUrl={selectedImage}
-        onOverlayClick={handleOverlayClick}
-      />
+    <>
+      <Toaster />
 
-    </div>
+      <SearchBar
+        onSubmit={onSubmit}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+      {error ? (
+        <ErrorMessage message={"Oops, something went wrong"} />
+      ) : (
+        <ImageGallery images={images} onClick={onImageClick} />
+      )}
+
+      {isLoading && <Loader />}
+      {Boolean(total) &&
+        !error &&
+        Boolean(images.length) &&
+        page < total_pages && <LoadMoreBtn loadMoreHandle={loadMoreHandle} />}
+
+      <ImageModal
+        closeModal={() => setModalOpen(false)} 
+          isOpen={modalOpen} 
+          imageUrl={activeImg?.urls?.regular || ""}
+          alt={activeImg?.alt_description || ""}
+          likes={activeImg?.likes || 0}
+      />
+    </>
   );
 }
 

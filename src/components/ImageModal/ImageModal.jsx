@@ -1,7 +1,8 @@
-import styles from './Modal.module.css';
+import css from "./ImageModal.module.css";
+
 import { useEffect } from 'react';
 
-const Modal = ({ closeModal, isOpen, imageUrl }) => {
+const ImageModal = ({ closeModal, isOpen, imageUrl }) => {
   const handleOverlayClick = e => {
     if (e.target === e.currentTarget) {
       closeModal();
@@ -21,14 +22,14 @@ const Modal = ({ closeModal, isOpen, imageUrl }) => {
 
   return (
     <div
-      className={isOpen ? styles.Overlay : styles.Hidden}
+      className={isOpen ? css.Overlay : css.Hidden}
       onClick={handleOverlayClick}
     >
-      <div className={styles.Modal}>
+      <div className={css.Modal}>
         <img src={imageUrl} alt="Large" />
       </div>
     </div>
   );
 };
 
-export default Modal;
+export default ImageModal;

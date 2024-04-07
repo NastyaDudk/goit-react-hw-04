@@ -1,0 +1,24 @@
+.btn_wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.btn {
+  color: white;
+  background-color: #00bfff;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  margin-top: 20px;
+}
+
+.btn:hover {
+  cursor: pointer;
+  background-color: LightBlue;
+}
