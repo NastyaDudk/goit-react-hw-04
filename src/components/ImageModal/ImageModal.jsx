@@ -1,15 +1,12 @@
+import { useEffect } from 'react';
+import Modal from 'react-modal';
 import css from "./ImageModal.module.css";
 
-import { useEffect } from 'react';
+
+Modal.setAppElement("#root");
+
 
 const ImageModal = ({ closeModal, isOpen, imageUrl }) => {
-  const handleOverlayClick = e => {
-    if (e.target === e.currentTarget) {
-      closeModal();
-    }
-  };
-
-
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.key === 'Escape') {
@@ -21,14 +18,15 @@ const ImageModal = ({ closeModal, isOpen, imageUrl }) => {
   }, [closeModal]);
 
   return (
-    <div
-      className={isOpen ? css.Overlay : css.Hidden}
-      onClick={handleOverlayClick}
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={closeModal}
+      contentLabel="Image Modal"
+      overlayClassName={css.Overlay}
+      className={css.Modal}
     >
-      <div className={css.Modal}>
-        <img src={imageUrl} alt="Large" />
-      </div>
-    </div>
+      <img src={imageUrl} alt="Large" />
+    </Modal>
   );
 };
 
